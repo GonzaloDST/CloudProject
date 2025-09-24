@@ -15,7 +15,6 @@ class PaymentMethod(str, Enum):
     card = "card"
     transfer = "transfer"
 
-# User Schemas
 class UserBase(BaseModel):
     name: str
     email: EmailStr
@@ -32,13 +31,12 @@ class UserUpdate(BaseModel):
     address: Optional[str] = None
 
 class User(UserBase):
-    id: str
+    id: int 
     created_at: datetime
 
     class Config:
         from_attributes = True
 
-# Product Schemas
 class ProductBase(BaseModel):
     name: str
     price: float
@@ -53,16 +51,15 @@ class ProductUpdate(BaseModel):
     calories: Optional[int] = None
 
 class Product(ProductBase):
-    id: str
+    id: int  
     created_at: datetime
 
     class Config:
         from_attributes = True
 
-# Order Schemas
 class OrderBase(BaseModel):
-    user_id: str
-    product_id: str
+    user_id: int  
+    product_id: int
     status: OrderStatus = OrderStatus.pending
     total_price: float
     payment_method: PaymentMethod = PaymentMethod.cash
@@ -76,7 +73,7 @@ class OrderUpdate(BaseModel):
     payment_method: Optional[PaymentMethod] = None
 
 class Order(OrderBase):
-    id: str
+    id: int  
     order_date: datetime
 
     class Config:

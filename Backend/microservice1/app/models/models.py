@@ -1,8 +1,8 @@
 # Queries para usuarios
 USER_QUERIES = {
     "create": """
-        INSERT INTO users (id, name, email, phone_number, address) 
-        VALUES (UUID(), %s, %s, %s, %s)
+        INSERT INTO users (name, email, phone_number, address) 
+        VALUES (%s, %s, %s, %s)
     """,
     "get_all": "SELECT * FROM users",
     "get_by_id": "SELECT * FROM users WHERE id = %s",
@@ -17,8 +17,8 @@ USER_QUERIES = {
 # Queries para productos
 PRODUCT_QUERIES = {
     "create": """
-        INSERT INTO products (id, name, price, calories) 
-        VALUES (UUID(), %s, %s, %s)
+        INSERT INTO products (name, price, calories) 
+        VALUES (%s, %s, %s)
     """,
     "get_all": "SELECT * FROM products",
     "get_by_id": "SELECT * FROM products WHERE id = %s",
@@ -32,8 +32,8 @@ PRODUCT_QUERIES = {
 # Queries para pedidos
 ORDER_QUERIES = {
     "create": """
-        INSERT INTO orders (id, user_id, product_id, status, total_price, payment_method) 
-        VALUES (UUID(), %s, %s, %s, %s, %s)
+        INSERT INTO orders (user_id, product_id, status, total_price, payment_method) 
+        VALUES (%s, %s, %s, %s, %s)
     """,
     "get_all": """
         SELECT o.*, u.name as user_name, p.name as product_name 

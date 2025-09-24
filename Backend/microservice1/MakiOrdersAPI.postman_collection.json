@@ -1,0 +1,396 @@
+{
+	"info": {
+		"name": "Maki Orders API - CRUD Complete",
+		"description": "Colección completa para probar CRUD de Users, Products y Orders",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "🎯 HEALTH CHECK",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/health",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["health"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "👥 USERS CRUD",
+			"item": [
+				{
+					"name": "GET - Listar todos los usuarios",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/users/",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["users", ""]
+						}
+					}
+				},
+				{
+					"name": "POST - Crear nuevo usuario",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Ana García López\",\n  \"email\": \"ana.garcia@example.com\",\n  \"phone_number\": \"+51987654322\",\n  \"address\": \"Av. Arequipa 123, Lima\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/users/",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["users", ""]
+						}
+					}
+				},
+				{
+					"name": "GET - Obtener usuario por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/users/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["users", "1"]
+						},
+						"description": "Reemplazar 1 con un ID real de la base de datos"
+					}
+				},
+				{
+					"name": "PUT - Actualizar usuario",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Gonzalo Suárez Torres ACTUALIZADO\",\n  \"phone_number\": \"+51999999999\",\n  \"address\": \"Jr. Medrano Silva 165 - UPDATED\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/users/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["users", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🍣 PRODUCTS CRUD",
+			"item": [
+				{
+					"name": "GET - Listar todos los productos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/products/",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["products", ""]
+						}
+					}
+				},
+				{
+					"name": "POST - Crear nuevo producto",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Volcano Roll Especial\",\n  \"price\": 25.99,\n  \"calories\": 480\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/products/",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["products", ""]
+						}
+					}
+				},
+				{
+					"name": "GET - Obtener producto por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/products/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["products", "1"]
+						}
+					}
+				},
+				{
+					"name": "PUT - Actualizar producto",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"California Roll Premium DELUXE\",\n  \"price\": 21.99,\n  \"calories\": 350\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/products/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["products", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "📦 ORDERS CRUD",
+			"item": [
+				{
+					"name": "GET - Listar todos los pedidos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/orders/",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["orders", ""]
+						}
+					}
+				},
+				{
+					"name": "POST - Crear nuevo pedido",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user_id\": \"2\",\n  \"product_id\": \"3\",\n  \"status\": \"pending\",\n  \"total_price\": 24.99,\n  \"payment_method\": \"card\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/orders/",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["orders", ""]
+						}
+					}
+				},
+				{
+					"name": "GET - Obtener pedido por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/orders/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["orders", "1"]
+						}
+					}
+				},
+				{
+					"name": "GET - Pedidos por usuario",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/orders/?user_id=1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["orders", ""],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "GET - Pedidos por estado",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/orders/?status=confirmed",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["orders", ""],
+							"query": [
+								{
+									"key": "status",
+									"value": "confirmed"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "PUT - Actualizar pedido",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"delivered\",\n  \"payment_method\": \"transfer\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/orders/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["orders", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🧪 TEST DATA",
+			"item": [
+				{
+					"name": "Obtener IDs para pruebas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/users/",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["users", ""]
+						},
+						"description": "Ejecutar primero para obtener los IDs reales de la base de datos"
+					}
+				},
+				{
+					"name": "Crear datos de prueba completos",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Usuario Prueba\",\n  \"email\": \"prueba@test.com\",\n  \"phone_number\": \"+51999999999\",\n  \"address\": \"Dirección de prueba\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/users/",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["users", ""]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🗑️ DELETES",
+			"item": [
+				{
+					"name": "DELETE - Eliminar usuario",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/users/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["users", "1"]
+						}
+					}
+				},
+				{
+					"name": "DELETE - Eliminar producto",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/products/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["products", "1"]
+						}
+					}
+				},
+				{
+					"name": "DELETE - Eliminar pedido",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/orders/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["orders", "4"]
+						}
+					}
+				}
+			]
+		}
+	]
+}
