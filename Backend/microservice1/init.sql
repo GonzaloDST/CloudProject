@@ -3,7 +3,7 @@ USE maki_orders;
 
 -- 1. Tabla de USUARIOS
 CREATE TABLE IF NOT EXISTS users (
-    id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     phone_number VARCHAR(20),
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- 2. Tabla de PRODUCTOS
 CREATE TABLE IF NOT EXISTS products (
-    id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(200) NOT NULL,
     price DECIMAL(8,2) NOT NULL,
     calories INT,
@@ -22,9 +22,9 @@ CREATE TABLE IF NOT EXISTS products (
 
 -- 3. Tabla de PEDIDOS
 CREATE TABLE IF NOT EXISTS orders (
-    id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
-    user_id VARCHAR(36) NOT NULL,
-    product_id VARCHAR(36) NOT NULL,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    product_id INT NOT NULL,
     status ENUM('pending', 'confirmed', 'preparing', 'delivered', 'cancelled') DEFAULT 'pending',
     order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     total_price DECIMAL(10,2) NOT NULL,
