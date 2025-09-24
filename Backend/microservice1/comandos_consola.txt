@@ -1,0 +1,15 @@
+docker compose up --build -d 
+
+docker volume ls
+docker network ls
+
+docker compose exec mysql mysql -u utecino -putec	
+
+show databases;
+use maki_orders;
+show tables;
+select * from users;
+select * from products;
+select * from orders;
+
+docker compose down -v

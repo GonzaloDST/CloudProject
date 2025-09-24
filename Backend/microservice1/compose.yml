@@ -1,0 +1,56 @@
+services:
+  # Base de datos MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: maki_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: utec
+      MYSQL_DATABASE: maki_orders
+      MYSQL_USER: utecino
+      MYSQL_PASSWORD: utec
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - maki_network
+    healthcheck:
+      test: [
+        "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-putec"
+      ]
+      timeout: 30s
+      retries: 10
+      start_period: 40s
+      interval: 10s
+
+  # Aplicación FastAPI
+  api:
+    build: .
+    container_name: maki_api
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: utecino
+      DB_PASSWORD: utec
+      DB_NAME: maki_orders
+    ports:
+      - "8000:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    networks:
+      - maki_network
+    command: >
+      sh -c "sleep 10 && 
+      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+
+volumes:
+  mysql_data:
+
+networks:
+  maki_network:
+    driver: bridge
