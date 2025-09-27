@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: maki_postgres
+    environment:
+      POSTGRES_DB: MenuDB
+      POSTGRES_USER: microserviciomenu
+      POSTGRES_PASSWORD: micromenu
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - maki_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U microserviciomenu -d MenuDB"]
+      interval: 10s
+      timeout: 30s
+      retries: 10
+      start_period: 30s
+
+  api:
+    build: .
+    container_name: maki_menu_api
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: microserviciomenu
+      DB_PASSWORD: micromenu
+      DB_NAME: MenuDB
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    networks:
+      - maki_network
+    command: >
+      sh -c "sleep 15 && 
+      java -jar target/menu-service-0.0.1-SNAPSHOT.jar"
+
+volumes:
+  postgres_data:
+
+networks:
+  maki_network:
+    driver: bridge

@@ -1,0 +1,123 @@
+{
+  "info": {
+    "name": "Microservicio Menu - CRUD",
+    "description": "Colección completa para probar CRUD de Makis e Ingredientes en Spring Boot",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "MAKIS CRUD",
+      "item": [
+        {
+          "name": "GET - Listar todos los Makis",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://localhost:8080/api/makis"
+          }
+        },
+        {
+          "name": "GET - Obtener Maki por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://localhost:8080/api/makis/1"
+          }
+        },
+        {
+          "name": "POST - Crear nuevo Maki",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Philadelphia Roll\",\n  \"descripcion\": \"Maki con salmón y queso crema\",\n  \"precio\": 20.00,\n  \"ingredientes\": [\n    { \"id\": 1 },\n    { \"id\": 3 }\n  ]\n}"
+            },
+            "url": "http://localhost:8080/api/makis"
+          }
+        },
+        {
+          "name": "PUT - Actualizar Maki",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"California Roll\",\n  \"descripcion\": \"Maki clásico con palta y cangrejo\",\n  \"precio\": 18.50,\n  \"ingredientes\": [\n    { \"id\": 2 },\n    { \"id\": 5 }\n  ]\n}"
+            },
+            "url": "http://localhost:8080/api/makis/1"
+          }
+        },
+        {
+          "name": "DELETE - Eliminar Maki",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "http://localhost:8080/api/makis/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "INGREDIENTES CRUD",
+      "item": [
+        {
+          "name": "GET - Listar todos los Ingredientes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://localhost:8080/api/ingredientes"
+          }
+        },
+        {
+          "name": "GET - Obtener Ingrediente por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://localhost:8080/api/ingredientes/1"
+          }
+        },
+        {
+          "name": "POST - Crear nuevo Ingrediente",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Salmón\",\n  \"stock\": 100\n}"
+            },
+            "url": "http://localhost:8080/api/ingredientes"
+          }
+        },
+        {
+          "name": "PUT - Actualizar Ingrediente",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Palta\",\n  \"stock\": 60\n}"
+            },
+            "url": "http://localhost:8080/api/ingredientes/1"
+          }
+        },
+        {
+          "name": "DELETE - Eliminar Ingrediente",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "http://localhost:8080/api/ingredientes/1"
+          }
+        }
+      ]
+    }
+  ]
+}

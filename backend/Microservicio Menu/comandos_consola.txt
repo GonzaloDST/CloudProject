@@ -1,0 +1,25 @@
+docker compose up --build -d
+
+docker volume ls
+docker network ls
+
+docker compose exec postgres psql -U microserviciomenu -d MenuDB
+-- Mostrar bases de datos
+\l
+
+-- Usar la base de datos principal
+\c MenuDB
+
+-- Mostrar tablas disponibles
+\dt
+
+-- Consultar tablas (ejemplos según tus entidades)
+SELECT * FROM maki;
+SELECT * FROM ingrediente;
+SELECT * FROM maki_ingrediente;
+
+SELECT * FROM students;
+
+docker compose down -v
+
+
