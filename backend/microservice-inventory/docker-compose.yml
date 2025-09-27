@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  # Microservicio de Inventario
+  inventory-service:
+    build: .
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=${PORT:-4000}
+      - MONGODB_URI=${MONGODB_URI}
+    env_file:
+      - .env
+    networks:
+      - inventory-network
+    restart: unless-stopped
+
+  # MongoDB Local (solo para desarrollo)
+  mongo-local:
+    image: mongo:7.0
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=inventory
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - inventory-network
+    profiles:
+      - local
+
+volumes:
+  mongo_data:
+
+networks:
+  inventory-network:
+    driver: bridge
