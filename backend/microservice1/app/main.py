@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.routes import users, products, orders
 from app.database import Database
 
@@ -6,6 +7,15 @@ app = FastAPI(
     title="Maki Orders API",
     description="Microservicio para gestión de pedidos de Maki",
     version="1.0.0"
+)
+
+# Configurar CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # En producción, especifica los dominios exactos
+    allow_credentials=False,
+    allow_methods=["*"],  # GET, POST, PUT, DELETE, etc.
+    allow_headers=["*"],  # Todos los headers
 )
 
 # Incluir routers
