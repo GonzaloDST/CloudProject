@@ -6,7 +6,8 @@ from app.database import Database
 app = FastAPI(
     title="Maki Orders API",
     description="Microservicio para gestión de pedidos de Maki",
-    version="1.0.0"
+    version="1.0.0",
+    redirect_slashes=False
 )
 
 # Configurar CORS
