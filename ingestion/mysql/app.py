@@ -108,29 +108,31 @@ def seed_mysql(conn, num_rows: int) -> int:
 
 
 def export_to_s3(conn, bucket: str, key_prefix: str) -> dict:
-    all_data = {}
+    json_lines = []
     
     with conn.cursor(dictionary=True) as cursor:
-        # Exportar usuarios
+        # Exportar usuarios (one-line JSON)
         cursor.execute("SELECT * FROM users")
-        all_data['users'] = cursor.fetchall()
+        for row in cursor.fetchall():
+            json_lines.append(json.dumps(row, default=str))
         
-        # Exportar productos
+        # Exportar productos (one-line JSON)
         cursor.execute("SELECT * FROM products")
-        all_data['products'] = cursor.fetchall()
+        for row in cursor.fetchall():
+            json_lines.append(json.dumps(row, default=str))
         
-        # Exportar órdenes
+        # Exportar órdenes (one-line JSON)
         cursor.execute("SELECT * FROM orders")
-        all_data['orders'] = cursor.fetchall()
+        for row in cursor.fetchall():
+            json_lines.append(json.dumps(row, default=str))
 
-    body = json.dumps(all_data, default=str)
+    body = "\n".join(json_lines)
     s3 = boto3.client("s3")
     timestamp = datetime.utcnow().strftime("%Y/%m/%d/%H%M%S")
     key = f"{key_prefix}/{timestamp}/data.json"
     s3.put_object(Bucket=bucket, Key=key, Body=body.encode("utf-8"), ContentType="application/json")
     
-    total_records = len(all_data['users']) + len(all_data['products']) + len(all_data['orders'])
-    return {"bucket": bucket, "key": key, "records": total_records}
+    return {"bucket": bucket, "key": key, "records": len(json_lines)}
 
 
 def main() -> None:

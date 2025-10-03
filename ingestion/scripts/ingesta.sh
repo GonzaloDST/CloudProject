@@ -50,18 +50,26 @@ TS=$(timestamp_path)
 
 echo "Exporting MongoDB ingredientes..."
 MONGO_OUT="$OUT_DIR/mongo_ingredientes.json"
-mongosh "$MONGO_URI" --eval 'DBQuery.shellBatchSize=50000; db.ingredientes.find({}).forEach(doc => printjsononeline(doc))' > "$MONGO_OUT"
+mongosh "$MONGO_URI" --eval 'DBQuery.shellBatchSize=50000; db.ingredientes.find({}).forEach(doc => print(JSON.stringify(doc)))' --quiet > "$MONGO_OUT"
 aws s3 cp "$MONGO_OUT" "s3://$S3_BUCKET/mongo/ingredientes/$TS/data.json"
 
 echo "Exporting MySQL data (users, products, orders)..."
 MYSQL_OUT="$OUT_DIR/mysql_data.json"
+# Exportar cada tabla por separado en formato one-line JSON
 mysql -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" -D "$MYSQL_DB" -B -N \
-  -e "SELECT JSON_OBJECT('table','users','data',JSON_ARRAYAGG(JSON_OBJECT('id',id,'name',name,'email',email,'phone_number',phone_number,'address',address,'created_at',created_at))) FROM users UNION ALL SELECT JSON_OBJECT('table','products','data',JSON_ARRAYAGG(JSON_OBJECT('id',id,'name',name,'price',price,'calories',calories,'created_at',created_at))) FROM products UNION ALL SELECT JSON_OBJECT('table','orders','data',JSON_ARRAYAGG(JSON_OBJECT('id',id,'user_id',user_id,'product_id',product_id,'status',status,'order_date',order_date,'total_price',total_price,'payment_method',payment_method))) FROM orders;" > "$MYSQL_OUT"
+  -e "SELECT JSON_OBJECT('id',id,'name',name,'email',email,'phone_number',phone_number,'address',address,'created_at',created_at) FROM users;" > "$MYSQL_OUT"
+mysql -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" -D "$MYSQL_DB" -B -N \
+  -e "SELECT JSON_OBJECT('id',id,'name',name,'price',price,'calories',calories,'created_at',created_at) FROM products;" >> "$MYSQL_OUT"
+mysql -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" -D "$MYSQL_DB" -B -N \
+  -e "SELECT JSON_OBJECT('id',id,'user_id',user_id,'product_id',product_id,'status',status,'order_date',order_date,'total_price',total_price,'payment_method',payment_method) FROM orders;" >> "$MYSQL_OUT"
 aws s3 cp "$MYSQL_OUT" "s3://$S3_BUCKET/mysql/data/$TS/data.json"
 
 echo "Exporting PostgreSQL data (ingrediente, maki, maki_ingrediente)..."
 PG_OUT="$OUT_DIR/pg_data.json"
-PGPASSWORD="$PG_PASSWORD" psql "host=$PG_HOST port=$PG_PORT dbname=$PG_DB user=$PG_USER" -c "\\copy (SELECT json_build_object('ingredientes', (SELECT json_agg(row_to_json(t)) FROM (SELECT * FROM ingrediente) t), 'makis', (SELECT json_agg(row_to_json(t)) FROM (SELECT * FROM maki) t), 'maki_ingredientes', (SELECT json_agg(row_to_json(t)) FROM (SELECT * FROM maki_ingrediente) t))) TO '$PG_OUT'"
+# Exportar cada tabla por separado en formato one-line JSON
+PGPASSWORD="$PG_PASSWORD" psql "host=$PG_HOST port=$PG_PORT dbname=$PG_DB user=$PG_USER" -t -c "SELECT row_to_json(t) FROM (SELECT * FROM ingrediente) t;" > "$PG_OUT"
+PGPASSWORD="$PG_PASSWORD" psql "host=$PG_HOST port=$PG_PORT dbname=$PG_DB user=$PG_USER" -t -c "SELECT row_to_json(t) FROM (SELECT * FROM maki) t;" >> "$PG_OUT"
+PGPASSWORD="$PG_PASSWORD" psql "host=$PG_HOST port=$PG_PORT dbname=$PG_DB user=$PG_USER" -t -c "SELECT row_to_json(t) FROM (SELECT * FROM maki_ingrediente) t;" >> "$PG_OUT"
 aws s3 cp "$PG_OUT" "s3://$S3_BUCKET/postgres/data/$TS/data.json"
 
 echo "All exports uploaded to s3://$S3_BUCKET/{mongo/ingredientes,mysql/data,postgres/data}/$TS/"

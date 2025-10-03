@@ -71,7 +71,12 @@ def export_to_s3(uri: str, database: str, collection: str, bucket: str, key_pref
             return o.isoformat()
         return str(o)
 
-    body = json.dumps(data, default=default_serializer)
+    # Formato one-line JSON para Athena (un documento por línea)
+    json_lines = []
+    for doc in data:
+        json_lines.append(json.dumps(doc, default=default_serializer))
+    
+    body = "\n".join(json_lines)
 
     s3 = boto3.client("s3")
     timestamp = datetime.utcnow().strftime("%Y/%m/%d/%H%M%S")

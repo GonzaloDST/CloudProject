@@ -115,29 +115,31 @@ def seed_postgres(conn, num_rows: int) -> int:
 
 
 def export_to_s3(conn, bucket: str, key_prefix: str) -> dict:
-    all_data = {}
+    json_lines = []
     
     with conn.cursor() as cur:
-        # Exportar ingredientes
+        # Exportar ingredientes (one-line JSON)
         cur.execute("SELECT row_to_json(t) FROM (SELECT * FROM ingrediente) t")
-        all_data['ingredientes'] = [r[0] for r in cur.fetchall()]
+        for row in cur.fetchall():
+            json_lines.append(json.dumps(row[0], default=str))
         
-        # Exportar makis
+        # Exportar makis (one-line JSON)
         cur.execute("SELECT row_to_json(t) FROM (SELECT * FROM maki) t")
-        all_data['makis'] = [r[0] for r in cur.fetchall()]
+        for row in cur.fetchall():
+            json_lines.append(json.dumps(row[0], default=str))
         
-        # Exportar relaciones maki-ingrediente
+        # Exportar relaciones maki-ingrediente (one-line JSON)
         cur.execute("SELECT row_to_json(t) FROM (SELECT * FROM maki_ingrediente) t")
-        all_data['maki_ingredientes'] = [r[0] for r in cur.fetchall()]
+        for row in cur.fetchall():
+            json_lines.append(json.dumps(row[0], default=str))
 
-    body = json.dumps(all_data, default=str)
+    body = "\n".join(json_lines)
     s3 = boto3.client("s3")
     timestamp = datetime.utcnow().strftime("%Y/%m/%d/%H%M%S")
     key = f"{key_prefix}/{timestamp}/data.json"
     s3.put_object(Bucket=bucket, Key=key, Body=body.encode("utf-8"), ContentType="application/json")
     
-    total_records = len(all_data['ingredientes']) + len(all_data['makis']) + len(all_data['maki_ingredientes'])
-    return {"bucket": bucket, "key": key, "records": total_records}
+    return {"bucket": bucket, "key": key, "records": len(json_lines)}
 
 
 def main() -> None:
