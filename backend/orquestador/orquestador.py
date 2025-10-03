@@ -13,11 +13,11 @@ app = FastAPI(
     redirect_slashes=False
 )
 
-# Configuración de microservicios usando nombres de Docker Compose
+# Configuración de microservicios usando nombres de contenedor reales
 MICROSERVICES = {
-    "orders": "http://microservice1:8000",           # Nombre del servicio en docker-compose
-    "inventory": "http://microservice-inventory:4000", # Nombre del servicio en docker-compose
-    "menu": "http://microservicio-menu:8080"         # Nombre del servicio en docker-compose
+    "orders":    "http://maki_api:8000",
+    "inventory": "http://inventory-service:4000",
+    "menu":      "http://menu_service:8080"
 }
 
 @app.get("/")
