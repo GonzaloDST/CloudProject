@@ -14,85 +14,130 @@ def get_env(name: str, default: str | None = None) -> str:
 
 
 def ensure_table(cur) -> None:
-    cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS ingredientes (
-          id BIGSERIAL PRIMARY KEY,
-          nombre TEXT,
-          categoria TEXT,
-          unidad TEXT,
-          stockActual INT,
-          stockMinimo INT,
-          precioUnitario NUMERIC(10,2),
-          activo BOOLEAN,
-          createdAt TIMESTAMP,
-          updatedAt TIMESTAMP
-        );
-        """
-    )
+    # Las tablas ya existen según init.sql: ingrediente, maki, maki_ingrediente
+    pass
 
 
-def generate_fake_rows(num_rows: int) -> list[tuple]:
-    categorias = ["Proteína", "Vegetal", "Condimento", "Lácteo", "Cereal"]
-    unidades = ["kg", "g", "l", "ml", "unidad"]
-    nombres = [
+def generate_fake_ingredientes(num_rows: int) -> list[tuple]:
+    nombres_ingredientes = [
         "Salmón", "Atún", "Pollo", "Carne", "Huevo",
         "Lechuga", "Tomate", "Cebolla", "Ajo", "Perejil",
         "Sal", "Pimienta", "Aceite", "Vinagre", "Salsa",
         "Queso", "Leche", "Yogurt", "Mantequilla", "Crema",
         "Arroz", "Trigo", "Avena", "Quinoa", "Cebada",
+        "Palta", "Tampico", "Queso crema", "Cangrejo", "Pepino"
     ]
-
+    
     rows: list[tuple] = []
     for i in range(1, num_rows + 1):
-        nombre = random.choice(nombres)
-        categoria = random.choice(categorias)
-        unidad = random.choice(unidades)
-        stock_actual = random.randint(1, 1000)
-        stock_minimo = max(1, int(stock_actual * 0.1))
-        precio_unitario = round(random.random() * 100 + 1, 2)
-        created_at = datetime.utcnow() - timedelta(days=random.randint(0, 365))
-        rows.append(
-            (
-                f"{nombre} {i}",
-                categoria,
-                unidad,
-                stock_actual,
-                stock_minimo,
-                precio_unitario,
-                random.random() > 0.1,
-                created_at,
-                datetime.utcnow(),
-            )
-        )
+        nombre = f"{random.choice(nombres_ingredientes)} {i}"
+        stock = random.randint(10, 200)
+        rows.append((nombre, stock))
+    return rows
+
+def generate_fake_makis(num_rows: int) -> list[tuple]:
+    nombres_makis = [
+        "California Roll", "Acevichado", "Philadelphia Roll",
+        "Dragon Roll", "Spicy Tuna Roll", "Salmon Roll",
+        "Eel Roll", "Crab Roll", "Tempura Roll", "Rainbow Roll"
+    ]
+    
+    descripciones = [
+        "Maki clásico con palta, cangrejo y pepino",
+        "Maki relleno de pescado y cubierto con salsa acevichada", 
+        "Maki con salmón y queso crema",
+        "Maki especial con ingredientes premium",
+        "Maki picante con atún fresco",
+        "Maki tradicional con salmón",
+        "Maki con anguila y salsa especial",
+        "Maki de cangrejo con mayonesa",
+        "Maki frito con tempura",
+        "Maki colorido con múltiples ingredientes"
+    ]
+    
+    rows: list[tuple] = []
+    for i in range(1, num_rows + 1):
+        nombre = f"{random.choice(nombres_makis)} {i}"
+        descripcion = random.choice(descripciones)
+        precio = round(random.uniform(15.50, 35.99), 2)
+        rows.append((nombre, descripcion, precio))
+    return rows
+
+def generate_fake_maki_ingredientes(num_makis: int, num_ingredientes: int) -> list[tuple]:
+    rows: list[tuple] = []
+    for maki_id in range(1, num_makis + 1):
+        # Cada maki tendrá entre 2-5 ingredientes
+        num_ingredientes_por_maki = random.randint(2, 5)
+        ingredientes_usados = set()
+        
+        for _ in range(num_ingredientes_por_maki):
+            ingrediente_id = random.randint(1, num_ingredientes)
+            if ingrediente_id not in ingredientes_usados:
+                ingredientes_usados.add(ingrediente_id)
+                rows.append((maki_id, ingrediente_id))
     return rows
 
 
 def seed_postgres(conn, num_rows: int) -> int:
     with conn.cursor() as cur:
         ensure_table(cur)
-        cur.execute("DELETE FROM ingredientes")
-        rows = generate_fake_rows(num_rows)
-        args_str = ",".join(cur.mogrify("(%s,%s,%s,%s,%s,%s,%s,%s,%s)", r).decode("utf-8") for r in rows)
-        cur.execute(
-            "INSERT INTO ingredientes (nombre,categoria,unidad,stockActual,stockMinimo,precioUnitario,activo,createdAt,updatedAt) VALUES "
-            + args_str
-        )
+        
+        # Limpiar tablas existentes
+        cur.execute("DELETE FROM maki_ingrediente")
+        cur.execute("DELETE FROM maki")
+        cur.execute("DELETE FROM ingrediente")
+        
+        # Insertar ingredientes
+        ingrediente_rows = generate_fake_ingredientes(min(num_rows, 100))
+        for row in ingrediente_rows:
+            cur.execute("INSERT INTO ingrediente (nombre, stock) VALUES (%s, %s)", row)
+        
+        # Obtener IDs de ingredientes insertados
+        cur.execute("SELECT id FROM ingrediente")
+        ingrediente_ids = [row[0] for row in cur.fetchall()]
+        
+        # Insertar makis
+        maki_rows = generate_fake_makis(min(num_rows, 50))
+        for row in maki_rows:
+            cur.execute("INSERT INTO maki (nombre, descripcion, precio) VALUES (%s, %s, %s)", row)
+        
+        # Obtener IDs de makis insertados
+        cur.execute("SELECT id FROM maki")
+        maki_ids = [row[0] for row in cur.fetchall()]
+        
+        # Insertar relaciones maki-ingrediente
+        maki_ingrediente_rows = generate_fake_maki_ingredientes(len(maki_ids), len(ingrediente_ids))
+        for row in maki_ingrediente_rows:
+            cur.execute("INSERT INTO maki_ingrediente (maki_id, ingrediente_id) VALUES (%s, %s)", row)
+        
     conn.commit()
-    return len(rows)
+    return len(ingrediente_rows) + len(maki_rows) + len(maki_ingrediente_rows)
 
 
 def export_to_s3(conn, bucket: str, key_prefix: str) -> dict:
+    all_data = {}
+    
     with conn.cursor() as cur:
-        cur.execute("SELECT row_to_json(t) FROM (SELECT * FROM ingredientes) t")
-        rows = [r[0] for r in cur.fetchall()]
+        # Exportar ingredientes
+        cur.execute("SELECT row_to_json(t) FROM (SELECT * FROM ingrediente) t")
+        all_data['ingredientes'] = [r[0] for r in cur.fetchall()]
+        
+        # Exportar makis
+        cur.execute("SELECT row_to_json(t) FROM (SELECT * FROM maki) t")
+        all_data['makis'] = [r[0] for r in cur.fetchall()]
+        
+        # Exportar relaciones maki-ingrediente
+        cur.execute("SELECT row_to_json(t) FROM (SELECT * FROM maki_ingrediente) t")
+        all_data['maki_ingredientes'] = [r[0] for r in cur.fetchall()]
 
-    body = json.dumps(rows, default=str)
+    body = json.dumps(all_data, default=str)
     s3 = boto3.client("s3")
     timestamp = datetime.utcnow().strftime("%Y/%m/%d/%H%M%S")
     key = f"{key_prefix}/{timestamp}/data.json"
     s3.put_object(Bucket=bucket, Key=key, Body=body.encode("utf-8"), ContentType="application/json")
-    return {"bucket": bucket, "key": key, "records": len(rows)}
+    
+    total_records = len(all_data['ingredientes']) + len(all_data['makis']) + len(all_data['maki_ingredientes'])
+    return {"bucket": bucket, "key": key, "records": total_records}
 
 
 def main() -> None:
