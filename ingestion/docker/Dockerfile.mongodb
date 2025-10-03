@@ -1,0 +1,29 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y \
+    curl \
+    && curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | gpg --dearmor -o /usr/share/keyrings/mongodb-server-7.0.gpg \
+    && echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-7.0.list \
+    && apt-get update \
+    && apt-get install -y mongodb-mongosh \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copiar requirements y instalar dependencias Python
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar el script de ingesta MongoDB
+COPY mongodb/ /app/mongodb/
+
+# Variables de entorno por defecto
+ENV MONGO_URI=mongodb://172.31.17.96:27017
+ENV MONGO_DB=inventory
+ENV MONGO_COLLECTION=ingredientes
+ENV S3_BUCKET=bucket-mv-ingesta
+ENV MODE=export
+
+# Comando por defecto
+CMD ["python", "mongodb/app.py"]

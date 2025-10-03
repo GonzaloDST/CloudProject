@@ -1,0 +1,27 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y \
+    mysql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copiar requirements y instalar dependencias Python
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar el script de ingesta MySQL
+COPY mysql/ /app/mysql/
+
+# Variables de entorno por defecto
+ENV DB_HOST=172.31.17.96
+ENV DB_PORT=8005
+ENV DB_USER=utecino
+ENV DB_PASSWORD=utec
+ENV DB_NAME=maki_orders
+ENV S3_BUCKET=bucket-mv-ingesta
+ENV MODE=export
+
+# Comando por defecto
+CMD ["python", "mysql/app.py"]
