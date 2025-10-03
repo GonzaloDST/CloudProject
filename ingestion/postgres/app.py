@@ -135,8 +135,8 @@ def export_to_s3(conn, bucket: str, key_prefix: str) -> dict:
 
     body = "\n".join(json_lines)
     s3 = boto3.client("s3")
-    timestamp = datetime.utcnow().strftime("%Y/%m/%d/%H%M%S")
-    key = f"{key_prefix}/{timestamp}/data.json"
+    timestamp = datetime.utcnow().strftime("%Y%m%d%H")
+    key = f"postgres/postgres_{timestamp}.json"
     s3.put_object(Bucket=bucket, Key=key, Body=body.encode("utf-8"), ContentType="application/json")
     
     return {"bucket": bucket, "key": key, "records": len(json_lines)}

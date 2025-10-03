@@ -20,7 +20,7 @@ set -euo pipefail
 #   PG_PASSWORD          default utec
 
 timestamp_path() {
-  date +%Y/%m/%d/%H
+  date +%Y%m%d%H
 }
 
 require_env() {
@@ -50,8 +50,8 @@ TS=$(timestamp_path)
 
 echo "Exporting MongoDB ingredientes..."
 MONGO_OUT="$OUT_DIR/mongo_ingredientes.json"
-mongosh "$MONGO_URI" --eval 'DBQuery.shellBatchSize=50000; db.ingredientes.find({}).forEach(doc => print(JSON.stringify(doc)))' --quiet > "$MONGO_OUT"
-aws s3 cp "$MONGO_OUT" "s3://$S3_BUCKET/mongo/ingredientes/$TS/data.json"
+mongosh "$MONGO_URI" --eval 'config.set("displayBatchSize", 50000); db.ingredientes.find({}).forEach(doc => print(JSON.stringify(doc)))' --quiet 2>/dev/null > "$MONGO_OUT"
+aws s3 cp "$MONGO_OUT" "s3://$S3_BUCKET/mongo/mongo_$TS.json"
 
 echo "Exporting MySQL data (users, products, orders)..."
 MYSQL_OUT="$OUT_DIR/mysql_data.json"
@@ -62,7 +62,7 @@ mysql -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" -D 
   -e "SELECT JSON_OBJECT('id',id,'name',name,'price',price,'calories',calories,'created_at',created_at) FROM products;" >> "$MYSQL_OUT"
 mysql -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" -D "$MYSQL_DB" -B -N \
   -e "SELECT JSON_OBJECT('id',id,'user_id',user_id,'product_id',product_id,'status',status,'order_date',order_date,'total_price',total_price,'payment_method',payment_method) FROM orders;" >> "$MYSQL_OUT"
-aws s3 cp "$MYSQL_OUT" "s3://$S3_BUCKET/mysql/data/$TS/data.json"
+aws s3 cp "$MYSQL_OUT" "s3://$S3_BUCKET/mysql/mysql_$TS.json"
 
 echo "Exporting PostgreSQL data (ingrediente, maki, maki_ingrediente)..."
 PG_OUT="$OUT_DIR/pg_data.json"
@@ -70,8 +70,12 @@ PG_OUT="$OUT_DIR/pg_data.json"
 PGPASSWORD="$PG_PASSWORD" psql "host=$PG_HOST port=$PG_PORT dbname=$PG_DB user=$PG_USER" -t -c "SELECT row_to_json(t) FROM (SELECT * FROM ingrediente) t;" > "$PG_OUT"
 PGPASSWORD="$PG_PASSWORD" psql "host=$PG_HOST port=$PG_PORT dbname=$PG_DB user=$PG_USER" -t -c "SELECT row_to_json(t) FROM (SELECT * FROM maki) t;" >> "$PG_OUT"
 PGPASSWORD="$PG_PASSWORD" psql "host=$PG_HOST port=$PG_PORT dbname=$PG_DB user=$PG_USER" -t -c "SELECT row_to_json(t) FROM (SELECT * FROM maki_ingrediente) t;" >> "$PG_OUT"
-aws s3 cp "$PG_OUT" "s3://$S3_BUCKET/postgres/data/$TS/data.json"
+aws s3 cp "$PG_OUT" "s3://$S3_BUCKET/postgres/postgres_$TS.json"
 
-echo "All exports uploaded to s3://$S3_BUCKET/{mongo/ingredientes,mysql/data,postgres/data}/$TS/"
+echo "All exports uploaded to s3://$S3_BUCKET/"
+echo "Files created:"
+echo "  - s3://$S3_BUCKET/mongo/mongo_$TS.json"
+echo "  - s3://$S3_BUCKET/mysql/mysql_$TS.json" 
+echo "  - s3://$S3_BUCKET/postgres/postgres_$TS.json"
 
 

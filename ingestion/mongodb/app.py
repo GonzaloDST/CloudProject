@@ -79,8 +79,8 @@ def export_to_s3(uri: str, database: str, collection: str, bucket: str, key_pref
     body = "\n".join(json_lines)
 
     s3 = boto3.client("s3")
-    timestamp = datetime.utcnow().strftime("%Y/%m/%d/%H%M%S")
-    key = f"{key_prefix}/{timestamp}/data.json"
+    timestamp = datetime.utcnow().strftime("%Y%m%d%H")
+    key = f"mongo/mongo_{timestamp}.json"
     s3.put_object(Bucket=bucket, Key=key, Body=body.encode("utf-8"), ContentType="application/json")
     return {"bucket": bucket, "key": key, "records": len(data)}
 
