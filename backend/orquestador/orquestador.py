@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Request
 import httpx
 import logging
 
-# Configurar logging
+#Logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -13,7 +13,7 @@ app = FastAPI(
     redirect_slashes=False
 )
 
-# Configuración de microservicios usando nombres de contenedor reales
+#Microservicios config
 MICROSERVICES = {
     "orders":    "http://maki_api:8000",
     "inventory": "http://inventory-service:4000",
