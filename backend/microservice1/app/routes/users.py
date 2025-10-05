@@ -15,7 +15,14 @@ def create_user(user: UserCreate, conn = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Error creating user")
     except mysql.connector.Error as e:
         if "Duplicate entry" in str(e):
-            raise HTTPException(status_code=400, detail="Email already exists")
+            try:
+                existing_user = UserCRUD.get_user_by_email(conn, user.email)
+                if existing_user:
+                    return existing_user
+                else:
+                    raise HTTPException(status_code=400, detail="Email already exists")
+            except Exception:
+                raise HTTPException(status_code=400, detail="Email already exists")
         raise HTTPException(status_code=500, detail="Database error")
 
 @router.get("/", response_model=list[User])

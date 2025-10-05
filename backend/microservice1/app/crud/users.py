@@ -43,6 +43,17 @@ class UserCRUD:
             raise e
 
     @staticmethod
+    def get_user_by_email(conn, email: str):
+        try:
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute(USER_QUERIES["get_by_email"], (email,))
+            result = cursor.fetchone()
+            cursor.close()
+            return result
+        except Error as e:
+            raise e
+
+    @staticmethod
     def update_user(conn, user_id: str, user: UserUpdate):
         try:
             # Obtener usuario actual primero
