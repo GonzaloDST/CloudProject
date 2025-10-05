@@ -4,34 +4,6 @@
 
 Proyecto parcial sobre una tienda de makis construido con **microservicios** (FastAPI, NestJS, Spring Boot), **persistencia poliglota** (MySQL, MongoDB, PostgreSQL), **API Gateway + Load Balancer** y un **pipeline de datos** a **S3 → Glue → Athena**.
 
----
-
-## 🔎 Tabla de Contenidos
-
-- [Arquitectura](#arquitectura)
-- [Servicios](#servicios)
-- [Prerrequisitos](#prerrequisitos)
-- [Despliegue Rápido](#despliegue-rápido)
-  - [MongoDB + Inventario (NestJS)](#mongodb--inventario-nestjs)
-  - [MySQL + Órdenes (FastAPI)](#mysql--órdenes-fastapi)
-  - [PostgreSQL + Menú (Spring-boot)](#postgresql--menú-spring-boot)
-  - [Red Docker y Orquestador](#red-docker-y-orquestador)
-- [API Gateway](#api-gateway)
-  - [Integraciones hacia el Load Balancer](#integraciones-hacia-el-load-balancer)
-  - [Rutas, Stage y CORS](#rutas-stage-y-cors)
-  - [Base URL y ejemplos cURL](#base-url-y-ejemplos-curl)
-- [Ingesta de Datos a S3](#ingesta-de-datos-a-s3)
-  - [Variables de entorno y ejecución](#variables-de-entorno-y-ejecución)
-  - [Ingesta en contenedores (opcional)](#ingesta-en-contenedores-opcional)
-- [Glue y Athena](#glue-y-athena)
-  - [Creación de crawlers](#creación-de-crawlers)
-  - [Consultas de verificación en Athena](#consultas-de-verificación-en-athena)
-- [Resumen de Endpoints](#resumen-de-endpoints)
-- [Notas y solución de problemas](#notas-y-solución-de-problemas)
-- [Repositorio](#repositorio)
-
----
-
 ## Arquitectura
 
 - **3 microservicios:**
