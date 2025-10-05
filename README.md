@@ -28,9 +28,8 @@ Proyecto parcial sobre una tienda de makis construido con **microservicios** (Fa
 ## Prerrequisitos
 
 - Docker y docker compose
-- Nginx/HAProxy (o LB de tu nube)
+- LB
 - Credenciales AWS con permisos **S3, Glue, Athena**
-- (Opcional) AWS CLI configurado
 
 ---
 
