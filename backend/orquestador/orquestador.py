@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 import httpx
 import logging
 
@@ -11,6 +12,15 @@ app = FastAPI(
     version="1.0.0",
     description="Orquestador que redirige peticiones a microservicios",
     redirect_slashes=False
+)
+
+# Configurar CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # En producción, especifica los dominios exactos
+    allow_credentials=False,
+    allow_methods=["*"],  # GET, POST, PUT, DELETE, etc.
+    allow_headers=["*"],  # Todos los headers
 )
 
 #Microservicios config
