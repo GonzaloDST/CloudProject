@@ -1,5 +1,6 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 import httpx
 import logging
 
@@ -61,9 +62,13 @@ async def redirect_request(service: str, path: str, request: Request):
             
             logger.info(f"Respuesta de {service}: {response.status_code}")
             
-            # Para endpoints de documentación (Swagger), devolver HTML
+            # Para endpoints de documentación (Swagger), devolver HTML con Content-Type correcto
             if "docs" in path or "swagger" in path:
-                return response.text
+                return HTMLResponse(
+                    content=response.text,
+                    status_code=response.status_code,
+                    headers=dict(response.headers)
+                )
             
             # Para otros endpoints, intentar JSON
             try:
