@@ -1,8 +1,9 @@
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 import httpx
 import logging
+import json
 
 #Logging
 logging.basicConfig(level=logging.INFO)
@@ -62,12 +63,37 @@ async def redirect_request(service: str, path: str, request: Request):
             
             logger.info(f"Respuesta de {service}: {response.status_code}")
             
+            # Manejar redirects (302, 301)
+            if response.status_code in [301, 302]:
+                location = response.headers.get('location', '')
+                if location:
+                    # Reemplazar URL interna con URL del orquestrador
+                    if service in location:
+                        new_location = location.replace(f"http://{service}_service", f"https://jiql4i2xy4.execute-api.us-east-1.amazonaws.com/prod/api/{service}")
+                        return RedirectResponse(url=new_location, status_code=response.status_code)
+                return RedirectResponse(url=location, status_code=response.status_code)
+            
             # Para endpoints de documentación (Swagger), devolver HTML con Content-Type correcto
             if "docs" in path or "swagger" in path:
+                # Limpiar headers problemáticos
+                clean_headers = {k: v for k, v in response.headers.items() 
+                                if k.lower() not in ['content-length', 'transfer-encoding', 'connection']}
                 return HTMLResponse(
                     content=response.text,
                     status_code=response.status_code,
-                    headers=dict(response.headers)
+                    headers=clean_headers
+                )
+            
+            # Para archivos estáticos de Swagger (CSS, JS, imágenes)
+            if any(ext in path for ext in ['.css', '.js', '.png', '.ico', '.svg']):
+                # Limpiar headers problemáticos para archivos estáticos
+                clean_headers = {k: v for k, v in response.headers.items() 
+                                if k.lower() not in ['content-length', 'transfer-encoding', 'connection']}
+                return Response(
+                    content=response.content,
+                    status_code=response.status_code,
+                    headers=clean_headers,
+                    media_type=response.headers.get('content-type', 'application/octet-stream')
                 )
             
             # Para archivos OpenAPI, devolver JSON
