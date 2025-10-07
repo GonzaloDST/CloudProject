@@ -41,6 +41,42 @@ async def health_check():
         "microservices": list(MICROSERVICES.keys())
     }
 
+# Ruta específica para archivos estáticos de Swagger
+@app.get("/api/{service}/static/{file_path:path}")
+async def static_files(service: str, file_path: str, request: Request):
+    """Maneja archivos estáticos de Swagger UI"""
+    if service not in MICROSERVICES:
+        raise HTTPException(404, f"Microservicio '{service}' no encontrado")
+    
+    # Mapear archivos estáticos a diferentes rutas según el microservicio
+    if service == "orders":  # FastAPI
+        target_url = f"{MICROSERVICES[service]}/static/{file_path}"
+    elif service == "inventory":  # NestJS
+        target_url = f"{MICROSERVICES[service]}/docs/{file_path}"
+    elif service == "menu":  # Spring Boot
+        target_url = f"{MICROSERVICES[service]}/webjars/springdoc-openapi-ui/{file_path}"
+    else:
+        target_url = f"{MICROSERVICES[service]}/{file_path}"
+    
+    logger.info(f"Archivo estático: {request.url} → {target_url}")
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
+            response = await client.get(target_url)
+            
+            clean_headers = {k: v for k, v in response.headers.items() 
+                            if k.lower() not in ['content-length', 'transfer-encoding', 'connection', 'server']}
+            
+            return Response(
+                content=response.content,
+                status_code=response.status_code,
+                headers=clean_headers,
+                media_type=response.headers.get('content-type', 'application/octet-stream')
+            )
+    except Exception as e:
+        logger.error(f"Error cargando archivo estático: {str(e)}")
+        raise HTTPException(404, f"Archivo estático no encontrado")
+
 @app.api_route("/api/{service}/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
 async def redirect_request(service: str, path: str, request: Request):
     """Redirige peticiones a microservicios específicos"""
@@ -53,7 +89,7 @@ async def redirect_request(service: str, path: str, request: Request):
     logger.info(f"Redirigiendo {request.method} {request.url} → {target_url}")
     
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
             response = await client.request(
                 method=request.method,
                 url=target_url,
@@ -63,32 +99,12 @@ async def redirect_request(service: str, path: str, request: Request):
             
             logger.info(f"Respuesta de {service}: {response.status_code}")
             
-            # Manejar redirects (302, 301)
-            if response.status_code in [301, 302]:
-                location = response.headers.get('location', '')
-                if location:
-                    # Reemplazar URL interna con URL del orquestrador
-                    if service in location:
-                        new_location = location.replace(f"http://{service}_service", f"https://jiql4i2xy4.execute-api.us-east-1.amazonaws.com/prod/api/{service}")
-                        return RedirectResponse(url=new_location, status_code=response.status_code)
-                return RedirectResponse(url=location, status_code=response.status_code)
+            # Limpiar headers problemáticos para todas las respuestas
+            clean_headers = {k: v for k, v in response.headers.items() 
+                            if k.lower() not in ['content-length', 'transfer-encoding', 'connection', 'server']}
             
-            # Para endpoints de documentación (Swagger), devolver HTML con Content-Type correcto
-            if "docs" in path or "swagger" in path:
-                # Limpiar headers problemáticos
-                clean_headers = {k: v for k, v in response.headers.items() 
-                                if k.lower() not in ['content-length', 'transfer-encoding', 'connection']}
-                return HTMLResponse(
-                    content=response.text,
-                    status_code=response.status_code,
-                    headers=clean_headers
-                )
-            
-            # Para archivos estáticos de Swagger (CSS, JS, imágenes)
-            if any(ext in path for ext in ['.css', '.js', '.png', '.ico', '.svg']):
-                # Limpiar headers problemáticos para archivos estáticos
-                clean_headers = {k: v for k, v in response.headers.items() 
-                                if k.lower() not in ['content-length', 'transfer-encoding', 'connection']}
+            # Para archivos estáticos (CSS, JS, imágenes, fuentes)
+            if any(ext in path.lower() for ext in ['.css', '.js', '.png', '.ico', '.svg', '.woff', '.woff2', '.ttf']):
                 return Response(
                     content=response.content,
                     status_code=response.status_code,
@@ -96,11 +112,19 @@ async def redirect_request(service: str, path: str, request: Request):
                     media_type=response.headers.get('content-type', 'application/octet-stream')
                 )
             
-            # Para archivos OpenAPI, devolver JSON
+            # Para archivos OpenAPI JSON
             if "openapi.json" in path or "api-docs" in path:
                 return response.json()
             
-            # Para otros endpoints, intentar JSON
+            # Para endpoints de documentación (Swagger), devolver HTML
+            if "docs" in path or "swagger" in path:
+                return HTMLResponse(
+                    content=response.text,
+                    status_code=response.status_code,
+                    headers=clean_headers
+                )
+            
+            # Para otros endpoints, intentar JSON primero
             try:
                 return response.json()
             except:
