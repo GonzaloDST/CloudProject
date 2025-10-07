@@ -70,6 +70,10 @@ async def redirect_request(service: str, path: str, request: Request):
                     headers=dict(response.headers)
                 )
             
+            # Para archivos OpenAPI, devolver JSON
+            if "openapi.json" in path or "api-docs" in path:
+                return response.json()
+            
             # Para otros endpoints, intentar JSON
             try:
                 return response.json()
