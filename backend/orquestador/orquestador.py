@@ -41,24 +41,15 @@ async def health_check():
         "microservices": list(MICROSERVICES.keys())
     }
 
-# Ruta específica para archivos estáticos de Swagger
+# Rutas específicas para archivos estáticos de Swagger
 @app.get("/api/{service}/static/{file_path:path}")
-async def static_files(service: str, file_path: str, request: Request):
-    """Maneja archivos estáticos de Swagger UI"""
+async def static_files_fastapi(service: str, file_path: str, request: Request):
+    """Maneja archivos estáticos de FastAPI Swagger UI"""
     if service not in MICROSERVICES:
         raise HTTPException(404, f"Microservicio '{service}' no encontrado")
     
-    # Mapear archivos estáticos a diferentes rutas según el microservicio
-    if service == "orders":  # FastAPI
-        target_url = f"{MICROSERVICES[service]}/static/{file_path}"
-    elif service == "inventory":  # NestJS
-        target_url = f"{MICROSERVICES[service]}/docs/{file_path}"
-    elif service == "menu":  # Spring Boot
-        target_url = f"{MICROSERVICES[service]}/webjars/springdoc-openapi-ui/{file_path}"
-    else:
-        target_url = f"{MICROSERVICES[service]}/{file_path}"
-    
-    logger.info(f"Archivo estático: {request.url} → {target_url}")
+    target_url = f"{MICROSERVICES[service]}/static/{file_path}"
+    logger.info(f"Archivo estático FastAPI: {request.url} → {target_url}")
     
     try:
         async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
@@ -74,7 +65,33 @@ async def static_files(service: str, file_path: str, request: Request):
                 media_type=response.headers.get('content-type', 'application/octet-stream')
             )
     except Exception as e:
-        logger.error(f"Error cargando archivo estático: {str(e)}")
+        logger.error(f"Error cargando archivo estático FastAPI: {str(e)}")
+        raise HTTPException(404, f"Archivo estático no encontrado")
+
+@app.get("/api/{service}/webjars/{file_path:path}")
+async def static_files_springboot(service: str, file_path: str, request: Request):
+    """Maneja archivos estáticos de Spring Boot Swagger UI"""
+    if service not in MICROSERVICES:
+        raise HTTPException(404, f"Microservicio '{service}' no encontrado")
+    
+    target_url = f"{MICROSERVICES[service]}/webjars/{file_path}"
+    logger.info(f"Archivo estático Spring Boot: {request.url} → {target_url}")
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
+            response = await client.get(target_url)
+            
+            clean_headers = {k: v for k, v in response.headers.items() 
+                            if k.lower() not in ['content-length', 'transfer-encoding', 'connection', 'server']}
+            
+            return Response(
+                content=response.content,
+                status_code=response.status_code,
+                headers=clean_headers,
+                media_type=response.headers.get('content-type', 'application/octet-stream')
+            )
+    except Exception as e:
+        logger.error(f"Error cargando archivo estático Spring Boot: {str(e)}")
         raise HTTPException(404, f"Archivo estático no encontrado")
 
 @app.api_route("/api/{service}/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
@@ -118,8 +135,19 @@ async def redirect_request(service: str, path: str, request: Request):
             
             # Para endpoints de documentación (Swagger), devolver HTML
             if "docs" in path or "swagger" in path:
+                # Modificar el HTML para que los archivos estáticos apunten al orquestrador
+                html_content = response.text
+                
+                # Reemplazar rutas de archivos estáticos para que apunten al orquestrador
+                if service == "orders":  # FastAPI
+                    html_content = html_content.replace('/static/', f'/api/{service}/static/')
+                elif service == "inventory":  # NestJS
+                    html_content = html_content.replace('/docs/', f'/api/{service}/docs/')
+                elif service == "menu":  # Spring Boot
+                    html_content = html_content.replace('/webjars/', f'/api/{service}/webjars/')
+                
                 return HTMLResponse(
-                    content=response.text,
+                    content=html_content,
                     status_code=response.status_code,
                     headers=clean_headers
                 )
