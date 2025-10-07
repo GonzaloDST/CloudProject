@@ -118,18 +118,25 @@ def export_to_s3(conn, bucket: str, key_prefix: str) -> dict:
     json_lines = []
     
     with conn.cursor() as cur:
-        # Exportar ingredientes (one-line JSON)
-        cur.execute("SELECT row_to_json(t) FROM (SELECT * FROM ingrediente) t")
-        for row in cur.fetchall():
-            json_lines.append(json.dumps(row[0], default=str))
-        
-        # Exportar makis (one-line JSON)
-        cur.execute("SELECT row_to_json(t) FROM (SELECT * FROM maki) t")
-        for row in cur.fetchall():
-            json_lines.append(json.dumps(row[0], default=str))
-        
-        # Exportar relaciones maki-ingrediente (one-line JSON)
-        cur.execute("SELECT row_to_json(t) FROM (SELECT * FROM maki_ingrediente) t")
+        # Exportar datos con JOIN para obtener información completa de makis con sus ingredientes
+        cur.execute("""
+            SELECT row_to_json(t) FROM (
+                SELECT 
+                    m.id as maki_id,
+                    m.nombre as maki_nombre,
+                    m.descripcion as maki_descripcion,
+                    m.precio as maki_precio,
+                    i.id as ingrediente_id,
+                    i.nombre as ingrediente_nombre,
+                    i.stock as ingrediente_stock,
+                    mi.maki_id,
+                    mi.ingrediente_id
+                FROM maki m
+                JOIN maki_ingrediente mi ON m.id = mi.maki_id
+                JOIN ingrediente i ON mi.ingrediente_id = i.id
+                ORDER BY m.id, i.id
+            ) t
+        """)
         for row in cur.fetchall():
             json_lines.append(json.dumps(row[0], default=str))
 

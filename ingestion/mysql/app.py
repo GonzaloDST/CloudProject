@@ -111,18 +111,28 @@ def export_to_s3(conn, bucket: str, key_prefix: str) -> dict:
     json_lines = []
     
     with conn.cursor(dictionary=True) as cursor:
-        # Exportar usuarios (one-line JSON)
-        cursor.execute("SELECT * FROM users")
-        for row in cursor.fetchall():
-            json_lines.append(json.dumps(row, default=str))
-        
-        # Exportar productos (one-line JSON)
-        cursor.execute("SELECT * FROM products")
-        for row in cursor.fetchall():
-            json_lines.append(json.dumps(row, default=str))
-        
-        # Exportar órdenes (one-line JSON)
-        cursor.execute("SELECT * FROM orders")
+        # Exportar datos con JOIN para obtener información completa
+        cursor.execute("""
+            SELECT 
+                o.id,
+                u.name,
+                u.email,
+                u.phone_number,
+                u.address,
+                u.created_at,
+                p.price,
+                p.calories,
+                o.user_id,
+                o.product_id,
+                o.status,
+                o.order_date,
+                o.total_price,
+                o.payment_method
+            FROM orders o
+            JOIN users u ON o.user_id = u.id
+            JOIN products p ON o.product_id = p.id
+            ORDER BY o.id
+        """)
         for row in cursor.fetchall():
             json_lines.append(json.dumps(row, default=str))
 
