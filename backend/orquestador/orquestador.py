@@ -10,9 +10,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
-    title="Orquestador de Microservicios",
+    title="Orquestrador de Microservicios",
     version="1.0.0",
-    description="Orquestador que redirige peticiones a microservicios",
+    description="Orquestrador que redirige peticiones a microservicios",
     redirect_slashes=False
 )
 
@@ -34,10 +34,10 @@ MICROSERVICES = {
 
 @app.get("/")
 async def health_check():
-    """Health check del orquestador"""
+    """Health check del orquestrador"""
     return {
         "status": "healthy", 
-        "service": "orquestador",
+        "service": "orquestrador",
         "microservices": list(MICROSERVICES.keys())
     }
 
@@ -58,11 +58,26 @@ async def static_files_fastapi(service: str, file_path: str, request: Request):
             clean_headers = {k: v for k, v in response.headers.items() 
                             if k.lower() not in ['content-length', 'transfer-encoding', 'connection', 'server']}
             
+            # Determinar Content-Type correcto basado en la extensión
+            content_type = 'application/octet-stream'
+            if file_path.lower().endswith('.css'):
+                content_type = 'text/css'
+            elif file_path.lower().endswith('.js'):
+                content_type = 'application/javascript'
+            elif file_path.lower().endswith('.png'):
+                content_type = 'image/png'
+            elif file_path.lower().endswith('.ico'):
+                content_type = 'image/x-icon'
+            elif file_path.lower().endswith('.svg'):
+                content_type = 'image/svg+xml'
+            elif file_path.lower().endswith(('.woff', '.woff2')):
+                content_type = 'font/woff2' if file_path.lower().endswith('.woff2') else 'font/woff'
+            
             return Response(
                 content=response.content,
                 status_code=response.status_code,
                 headers=clean_headers,
-                media_type=response.headers.get('content-type', 'application/octet-stream')
+                media_type=content_type
             )
     except Exception as e:
         logger.error(f"Error cargando archivo estático FastAPI: {str(e)}")
@@ -84,11 +99,26 @@ async def static_files_springboot(service: str, file_path: str, request: Request
             clean_headers = {k: v for k, v in response.headers.items() 
                             if k.lower() not in ['content-length', 'transfer-encoding', 'connection', 'server']}
             
+            # Determinar Content-Type correcto basado en la extensión
+            content_type = 'application/octet-stream'
+            if file_path.lower().endswith('.css'):
+                content_type = 'text/css'
+            elif file_path.lower().endswith('.js'):
+                content_type = 'application/javascript'
+            elif file_path.lower().endswith('.png'):
+                content_type = 'image/png'
+            elif file_path.lower().endswith('.ico'):
+                content_type = 'image/x-icon'
+            elif file_path.lower().endswith('.svg'):
+                content_type = 'image/svg+xml'
+            elif file_path.lower().endswith(('.woff', '.woff2')):
+                content_type = 'font/woff2' if file_path.lower().endswith('.woff2') else 'font/woff'
+            
             return Response(
                 content=response.content,
                 status_code=response.status_code,
                 headers=clean_headers,
-                media_type=response.headers.get('content-type', 'application/octet-stream')
+                media_type=content_type
             )
     except Exception as e:
         logger.error(f"Error cargando archivo estático Spring Boot: {str(e)}")
@@ -120,13 +150,28 @@ async def redirect_request(service: str, path: str, request: Request):
             clean_headers = {k: v for k, v in response.headers.items() 
                             if k.lower() not in ['content-length', 'transfer-encoding', 'connection', 'server']}
             
-            # Para archivos estáticos (CSS, JS, imágenes, fuentes)
+            # Para archivos estáticos (CSS, JS, imágenes, fuentes) - SOLUCIÓN CRÍTICA
             if any(ext in path.lower() for ext in ['.css', '.js', '.png', '.ico', '.svg', '.woff', '.woff2', '.ttf']):
+                # Determinar Content-Type correcto basado en la extensión
+                content_type = 'application/octet-stream'
+                if path.lower().endswith('.css'):
+                    content_type = 'text/css'
+                elif path.lower().endswith('.js'):
+                    content_type = 'application/javascript'
+                elif path.lower().endswith('.png'):
+                    content_type = 'image/png'
+                elif path.lower().endswith('.ico'):
+                    content_type = 'image/x-icon'
+                elif path.lower().endswith('.svg'):
+                    content_type = 'image/svg+xml'
+                elif path.lower().endswith(('.woff', '.woff2')):
+                    content_type = 'font/woff2' if path.lower().endswith('.woff2') else 'font/woff'
+                
                 return Response(
                     content=response.content,
                     status_code=response.status_code,
                     headers=clean_headers,
-                    media_type=response.headers.get('content-type', 'application/octet-stream')
+                    media_type=content_type
                 )
             
             # Para archivos OpenAPI JSON
