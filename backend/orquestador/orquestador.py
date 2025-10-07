@@ -60,7 +60,17 @@ async def redirect_request(service: str, path: str, request: Request):
             )
             
             logger.info(f"Respuesta de {service}: {response.status_code}")
-            return response.json()
+            
+            # Para endpoints de documentación (Swagger), devolver HTML
+            if "docs" in path or "swagger" in path:
+                return response.text
+            
+            # Para otros endpoints, intentar JSON
+            try:
+                return response.json()
+            except:
+                # Si no es JSON válido, devolver texto
+                return response.text
             
     except httpx.TimeoutException:
         logger.error(f"Timeout al conectar con {service}")
